@@ -41,7 +41,7 @@ submission (single-date and batch modes), history tracking.
 
 ```bash
 git clone https://github.com/AxelionAxell/siprakerinplayground-main.git
-cd siprakerinplayground-v2
+cd siprakerin-playgroundV2
 
 # install UI dependencies
 cd ui && npm install && cd ..
