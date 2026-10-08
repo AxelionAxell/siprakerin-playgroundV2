@@ -1,0 +1,927 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Siprakerin Playground V2 - absensi tanggal tunggal dan batch">
+    <title>Siprakerin Playground V2</title>
+    <link href="/output.css" rel="stylesheet">
+    <style>
+        .brand-mark img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 11px;
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-shell">
+        <div class="mobile-overlay" id="mobile-overlay"></div>
+
+        <aside class="sidebar" id="sidebar" aria-label="Navigasi utama">
+            <div class="brand-block">
+                <div class="brand-mark"><img src="/logo.png" alt="Logo Siprakerin"></div>
+                <div>
+                    <div class="brand-name">Siprakerin</div>
+                    <div class="brand-subtitle">Playground V2</div>
+                </div>
+            </div>
+
+            <nav class="side-nav">
+                <button class="nav-item" data-view-target="dashboard" type="button">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"></rect><rect x="14" y="3" width="7" height="7" rx="1"></rect><rect x="3" y="14" width="7" height="7" rx="1"></rect><rect x="14" y="14" width="7" height="7" rx="1"></rect></svg>
+                    <span>Dasbor</span>
+                </button>
+                <button class="nav-item" data-view-target="attendance" type="button">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3v3M16 3v3M4 9h16"></path><rect x="4" y="5" width="16" height="16" rx="2"></rect><path d="m9 15 2 2 4-5"></path></svg>
+                    <span>Absensi</span>
+                </button>
+                <button class="nav-item" data-view-target="batch" type="button">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M19 8v6M22 11h-6"></path></svg>
+                    <span>Absensi Batch</span>
+                </button>
+                <button class="nav-item" data-view-target="history" type="button">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"></path><path d="M3 3v5h5M12 7v5l3 2"></path></svg>
+                    <span>Riwayat</span>
+                </button>
+                <button class="nav-item" data-view-target="logs" type="button">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"></rect><path d="m7 9 3 3-3 3M13 15h4"></path></svg>
+                    <span>Log</span>
+                </button>
+            </nav>
+
+            <div class="sidebar-profile">
+                <div class="profile-avatar"><%= (defaults.nama || 'U').charAt(0).toUpperCase() %></div>
+                <div class="profile-copy">
+                    <strong><%= defaults.nama || 'Pengguna Siprakerin' %></strong>
+                    <span><%= defaults.nis || 'Session lokal' %></span>
+                </div>
+                <span class="connection-dot" id="connection-dot" title="Status server"></span>
+            </div>
+        </aside>
+
+        <main class="main-shell">
+            <header class="topbar">
+                <div class="topbar-left">
+                    <button class="icon-button mobile-menu-button" id="mobile-menu-button" type="button" aria-label="Buka navigasi">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"></path></svg>
+                    </button>
+                    <div class="topbar-brand">Siprakerin Playground V2</div>
+                </div>
+                <div class="topbar-actions">
+                    <label class="global-search">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg>
+                        <input id="global-search" type="search" placeholder="Cari catatan..." autocomplete="off">
+                    </label>
+                    <button class="icon-button" type="button" data-view-target="logs" aria-label="Buka log">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"></path><path d="M10 21h4"></path></svg>
+                    </button>
+                    <a class="icon-button" style="text-decoration:none" href="/logout" title="Keluar<%= username ? ' (' + username + ')' : '' %>" aria-label="Keluar">
+                        <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"></path></svg>
+                    </a>
+                    <div class="top-avatar"><%= (defaults.nama || 'S').charAt(0).toUpperCase() %></div>
+                </div>
+            </header>
+
+            <div class="content-scroll">
+                <div class="page-container">
+                    <section class="view-panel" data-view="dashboard">
+                        <div class="page-heading dashboard-heading">
+                            <div>
+                                <p class="eyebrow">Ringkasan</p>
+                                <h1>Selamat datang, <span><%= (defaults.nama || 'Pengguna').split(' ')[0] %></span></h1>
+                                <p>Ringkasan progres jurnal dan aktivitas Siprakerin Anda.</p>
+                            </div>
+                            <div class="system-chip" id="system-chip">
+                                <span></span>
+                                <strong>Memeriksa sistem</strong>
+                            </div>
+                        </div>
+
+                        <div class="dashboard-layout">
+                            <div class="dashboard-main">
+                                <div class="metric-grid">
+                                    <article class="metric-card">
+                                        <div class="metric-top">
+                                            <span class="metric-icon indigo"><svg viewBox="0 0 24 24"><path d="M8 3v3M16 3v3M4 9h16"></path><rect x="4" y="5" width="16" height="16" rx="2"></rect><path d="m9 15 2 2 4-5"></path></svg></span>
+                                            <span class="metric-trend positive" id="attendance-trend">Langsung</span>
+                                        </div>
+                                        <p>Tingkat Kehadiran</p>
+                                        <strong id="attendance-rate">0%</strong>
+                                    </article>
+                                    <article class="metric-card">
+                                        <div class="metric-top">
+                                            <span class="metric-icon violet"><svg viewBox="0 0 24 24"><path d="M5 4h14v16H5z"></path><path d="M9 4v5l3-2 3 2V4"></path></svg></span>
+                                            <span class="metric-trend positive" id="journal-trend">Tersinkron</span>
+                                        </div>
+                                        <p>Entri Jurnal</p>
+                                        <strong id="journal-count">0</strong>
+                                    </article>
+                                    <article class="metric-card">
+                                        <div class="metric-top">
+                                            <span class="metric-icon cyan"><svg viewBox="0 0 24 24"><path d="M8 3v3M16 3v3M4 9h16"></path><rect x="4" y="5" width="16" height="16" rx="2"></rect></svg></span>
+                                            <span class="metric-trend neutral">Target: 60</span>
+                                        </div>
+                                        <p>Hari Hadir</p>
+                                        <strong id="present-count">0</strong>
+                                    </article>
+                                </div>
+
+                                <article class="profile-card">
+                                    <div class="profile-card-avatar"><%= (defaults.nama || 'S').charAt(0).toUpperCase() %></div>
+                                    <div class="profile-card-copy">
+                                        <h2><%= defaults.nama || 'Pengguna Siprakerin' %></h2>
+                                        <p><svg viewBox="0 0 24 24"><path d="M20 10c0 5-8 11-8 11S4 15 4 10a8 8 0 1 1 16 0Z"></path><circle cx="12" cy="10" r="2"></circle></svg><%= defaults.nama_industri || 'Industri belum tersedia' %></p>
+                                        <p><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"></circle><path d="M4 21a8 8 0 0 1 16 0"></path></svg><%= defaults.nama_kelas || 'Kelas belum tersedia' %> · <%= defaults.keahlian || 'Keahlian belum tersedia' %></p>
+                                        <div class="profile-progress-label"><span>Progres Magang</span><strong id="internship-progress-label">0%</strong></div>
+                                        <div class="progress-track"><div class="progress-fill" id="internship-progress"></div></div>
+                                    </div>
+                                </article>
+                            </div>
+
+                            <aside class="quick-actions-card">
+                                <h2>Aksi Cepat</h2>
+                                <button type="button" data-view-target="attendance">
+                                    <span class="quick-icon indigo"><svg viewBox="0 0 24 24"><path d="M8 3v3M16 3v3M4 9h16"></path><rect x="4" y="5" width="16" height="16" rx="2"></rect><path d="m9 15 2 2 4-5"></path></svg></span>
+                                    <span>Kirim Absensi<small>Mode tanggal tunggal</small></span>
+                                    <svg class="chevron" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"></path></svg>
+                                </button>
+                                <button type="button" data-view-target="batch">
+                                    <span class="quick-icon violet"><svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M19 8v6M22 11h-6"></path></svg></span>
+                                    <span>Mulai Batch<small>Proses rentang tanggal</small></span>
+                                    <svg class="chevron" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"></path></svg>
+                                </button>
+                                <button type="button" data-view-target="history">
+                                    <span class="quick-icon cyan"><svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"></path><path d="M3 3v5h5M12 7v5l3 2"></path></svg></span>
+                                    <span>Lihat Riwayat<small>Periksa catatan yang terkirim</small></span>
+                                    <svg class="chevron" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"></path></svg>
+                                </button>
+                            </aside>
+                        </div>
+
+                        <article class="dashboard-log-card">
+                            <div class="card-heading-row dark">
+                                <h2><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"></rect><path d="m7 9 3 3-3 3M13 15h4"></path></svg>Log Sistem</h2>
+                                <button type="button" data-view-target="logs">Lihat semua <span>→</span></button>
+                            </div>
+                            <div class="dashboard-log-list" id="dashboard-log-list"></div>
+                        </article>
+                    </section>
+
+                    <section class="view-panel" data-view="attendance">
+                        <div class="page-heading">
+                            <div>
+                                <p class="eyebrow">Mode Tanggal Tunggal</p>
+                                <h1>Kirim Absensi</h1>
+                                <p>Kirim jurnal untuk satu tanggal menggunakan mekanisme lama.</p>
+                            </div>
+                        </div>
+
+                        <div class="single-layout">
+                            <article class="form-card">
+                                <form id="single-form" enctype="multipart/form-data">
+                                    <div class="form-grid two-columns">
+                                        <label class="field-group">
+                                            <span>Tanggal</span>
+                                            <input id="single-date" name="tanggal" type="date" min="<%= minJournalDate %>"<% if (maxJournalDate) { %> max="<%= maxJournalDate %>"<% } %> required>
+                                        </label>
+                                        <label class="field-group">
+                                            <span>Status</span>
+                                            <select id="single-status" name="keterangan" required>
+                                                <option value="hadir">Hadir</option>
+                                                <option value="izin">Izin</option>
+                                                <option value="libur">Libur</option>
+                                            </select>
+                                        </label>
+                                    </div>
+                                    <label class="field-group">
+                                        <span>Deskripsi Kegiatan</span>
+                                        <textarea id="single-activity" name="kegiatan" maxlength="500" rows="6" placeholder="Jelaskan tugas dan progres hari ini..." required></textarea>
+                                        <small class="character-count"><span id="single-character-count">0</span> / 500 karakter</small>
+                                    </label>
+
+                                    <div class="izin-note hidden" id="single-izin-info">
+                                        <strong>Izin lanjutan terdeteksi</strong>
+                                        <span id="single-izin-copy">Sistem akan memeriksa foto izin sebelumnya.</span>
+                                    </div>
+
+                                    <label class="upload-zone hidden" id="single-upload-zone">
+                                        <input id="single-file" name="foto_izin" type="file" accept=".png,.jpg,.jpeg,.webp,.pdf">
+                                        <svg viewBox="0 0 24 24"><path d="M12 16V4M7 9l5-5 5 5"></path><path d="M5 15v4h14v-4"></path></svg>
+                                        <strong>Unggah dokumen pendukung</strong>
+                                        <span id="single-file-label">PNG, JPG, WebP, atau PDF hingga 10MB</span>
+                                    </label>
+
+                                    <div class="form-actions">
+                                        <button class="button ghost" type="reset">Atur Ulang</button>
+                                        <button class="button primary" id="single-submit-button" type="submit">
+                                            <svg viewBox="0 0 24 24"><path d="m4 4 16 8-16 8 4-8-4-8Z"></path><path d="M8 12h12"></path></svg>
+                                            Kirim Absensi
+                                        </button>
+                                    </div>
+                                </form>
+                            </article>
+
+                            <aside class="recent-card">
+                                <div class="card-heading-row">
+                                    <div><p class="eyebrow">Aktivitas terbaru</p><h2>Log Terkini</h2></div>
+                                    <button type="button" data-view-target="history">Lihat semua</button>
+                                </div>
+                                <div class="recent-list" id="recent-journals"></div>
+                            </aside>
+                        </div>
+                    </section>
+
+                    <section class="view-panel" data-view="batch">
+                        <div class="page-heading batch-heading">
+                            <div>
+                                <p class="eyebrow">Pemrosesan Berurutan</p>
+                                <h1>Absensi Batch</h1>
+                                <p>Masukkan rentang hari. Setiap tanggal tetap dikirim satu per satu.</p>
+                            </div>
+                            <span class="mode-badge"><span></span> Mode berurutan</span>
+                        </div>
+
+                        <div class="batch-layout">
+                            <article class="form-card batch-form-card">
+                                <div class="card-heading-row">
+                                    <div><p class="eyebrow">Konfigurasi</p><h2>Rentang Tanggal</h2></div>
+                                    <span class="count-badge" id="batch-date-count">0 days</span>
+                                </div>
+                                <form id="batch-form" enctype="multipart/form-data">
+                                    <label class="field-group">
+                                        <span>Bulan</span>
+                                        <input id="batch-month" name="batch_month" type="month" min="2026-01" required>
+                                    </label>
+                                    <div class="form-grid two-columns">
+                                        <label class="field-group">
+                                            <span>Mulai (1–31)</span>
+                                            <input id="batch-start-day" name="start_day" type="number" min="1" max="31" value="1" required>
+                                        </label>
+                                        <label class="field-group">
+                                            <span>Sampai (1–31)</span>
+                                            <input id="batch-end-day" name="end_day" type="number" min="1" max="31" value="10" required>
+                                        </label>
+                                    </div>
+                                    <div class="form-grid two-columns">
+                                        <label class="field-group">
+                                            <span>Status</span>
+                                            <select id="batch-status" name="keterangan" required>
+                                                <option value="hadir">Hadir</option>
+                                                <option value="izin">Izin</option>
+                                                <option value="libur">Libur</option>
+                                            </select>
+                                        </label>
+                                        <label class="field-group">
+                                            <span>Delay antar request</span>
+                                            <select id="batch-delay" name="delay_ms">
+                                                <option value="500">500 ms</option>
+                                                <option value="750" selected>750 ms</option>
+                                                <option value="1000">1000 ms</option>
+                                            </select>
+                                        </label>
+                                    </div>
+                                    <label class="field-group">
+                                        <span>Deskripsi Kegiatan</span>
+                                        <textarea id="batch-activity" name="kegiatan" maxlength="500" rows="5" placeholder="Kegiatan yang diterapkan ke seluruh tanggal..." required></textarea>
+                                        <small class="character-count"><span id="batch-character-count">0</span> / 500 karakter</small>
+                                    </label>
+                                    <label class="upload-zone compact hidden" id="batch-upload-zone">
+                                        <input id="batch-file" name="foto_izin" type="file" accept=".png,.jpg,.jpeg,.webp,.pdf">
+                                        <svg viewBox="0 0 24 24"><path d="M12 16V4M7 9l5-5 5 5"></path><path d="M5 15v4h14v-4"></path></svg>
+                                        <strong>Surat izin untuk tanggal pertama</strong>
+                                        <span id="batch-file-label">Tanggal berikutnya memakai logic izin lanjutan lama.</span>
+                                    </label>
+                                    <div class="validation-message hidden" id="batch-validation-message"></div>
+                                    <button class="button primary full-width" id="batch-submit-button" type="submit">
+                                        <svg viewBox="0 0 24 24"><path d="m5 3 14 9-14 9V3Z"></path></svg>
+                                        Mulai Batch
+                                    </button>
+                                </form>
+                            </article>
+
+                            <div class="batch-monitor-column">
+                                <article class="batch-progress-card" id="batch-progress-card">
+                                    <div class="circular-progress" id="circular-progress"><span id="batch-progress-percent">0%</span></div>
+                                    <div class="batch-progress-copy">
+                                        <p class="eyebrow">Progres langsung</p>
+                                        <h2 id="batch-progress-title">Siap diproses</h2>
+                                        <p id="batch-progress-message">Atur rentang tanggal lalu mulai batch attendance.</p>
+                                        <div class="progress-track large"><div class="progress-fill" id="batch-progress-bar"></div></div>
+                                    </div>
+                                </article>
+
+                                <article class="batch-log-card">
+                                    <div class="card-heading-row">
+                                        <div><p class="eyebrow">Status per tanggal</p><h2>Log Eksekusi Batch</h2></div>
+                                        <div class="legend">
+                                            <span><i class="success"></i>Berhasil <b id="batch-success-count">0</b></span>
+                                            <span><i class="failed"></i>Gagal <b id="batch-failed-count">0</b></span>
+                                            <span><i class="pending"></i>Menunggu <b id="batch-pending-count">0</b></span>
+                                        </div>
+                                    </div>
+                                    <div class="batch-date-grid" id="batch-date-grid"></div>
+                                </article>
+
+                                <article class="batch-summary-card hidden" id="batch-summary-card">
+                                    <div class="summary-header">
+                                        <div class="summary-icon"><svg viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"></path></svg></div>
+                                        <div><p class="eyebrow">Selesai</p><h2>Ringkasan Batch</h2></div>
+                                    </div>
+                                    <div class="summary-grid">
+                                        <div><span>Total diproses</span><strong id="summary-total">0</strong></div>
+                                        <div><span>Berhasil</span><strong id="summary-success">0</strong></div>
+                                        <div><span>Gagal</span><strong id="summary-failed">0</strong></div>
+                                    </div>
+                                    <div class="failed-date-list hidden" id="failed-date-list"><strong>Tanggal gagal</strong><div id="failed-date-chips"></div></div>
+                                </article>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section class="view-panel" data-view="history">
+                        <div class="page-heading">
+                            <div>
+                                <p class="eyebrow">Catatan & Audit</p>
+                                <h1>Riwayat</h1>
+                                <p>Tinjau jurnal yang sudah dikirim dan hapus record bila diperlukan.</p>
+                            </div>
+                        </div>
+
+                        <article class="history-card">
+                            <div class="history-toolbar">
+                                <div class="filter-tabs" id="history-filter-tabs">
+                                    <button class="active" data-history-filter="all" type="button">Semua Catatan</button>
+                                    <button data-history-filter="hadir" type="button">Hadir</button>
+                                    <button data-history-filter="izin" type="button">Izin</button>
+                                    <button data-history-filter="libur" type="button">Libur</button>
+                                </div>
+                                <label class="table-search">
+                                    <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg>
+                                    <input id="history-search" type="search" placeholder="Cari catatan...">
+                                </label>
+                            </div>
+                            <div class="table-wrap">
+                                <table>
+                                    <thead><tr><th>Tanggal & Waktu</th><th>Kegiatan</th><th>Tipe</th><th>Status</th><th>Aksi</th></tr></thead>
+                                    <tbody id="history-table-body"></tbody>
+                                </table>
+                            </div>
+                            <div class="table-footer"><span id="history-count-label">Menampilkan 0 catatan</span><span class="sync-label"><i></i>Langsung dari Supabase</span></div>
+                        </article>
+                    </section>
+
+                    <section class="view-panel" data-view="logs">
+                        <div class="page-heading logs-heading">
+                            <div>
+                                <p class="eyebrow">Diagnostik</p>
+                                <h1>Log Sistem</h1>
+                                <p>Monitoring request, autentikasi, batch processing, dan error.</p>
+                            </div>
+                            <div class="page-actions">
+                                <button class="button secondary" id="clear-logs-button" type="button">Bersihkan</button>
+                                <button class="button primary" id="export-logs-button" type="button">
+                                    <svg viewBox="0 0 24 24"><path d="M12 3v12M7 10l5 5 5-5"></path><path d="M5 21h14"></path></svg>
+                                    Ekspor
+                                </button>
+                            </div>
+                        </div>
+
+                        <article class="terminal-card">
+                            <div class="terminal-toolbar">
+                                <div class="terminal-lights"><i></i><i></i><i></i></div>
+                                <span class="live-pill"><i></i>LANGSUNG</span>
+                                <label class="terminal-search">
+                                    <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg>
+                                    <input id="log-search" type="search" placeholder="Cari log...">
+                                </label>
+                            </div>
+                            <div class="terminal-output" id="terminal-output"></div>
+                        </article>
+                    </section>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div class="toast-region" id="toast-region" aria-live="polite"></div>
+
+    <script>
+        const INITIAL_VIEW = <%- JSON.stringify(activeView || 'dashboard') %>;
+        const SERVER_MESSAGE = <%- JSON.stringify(message || '') %>;
+        const SERVER_ERROR = <%- JSON.stringify(error || '') %>;
+        const DATE_MIN = <%- JSON.stringify(minJournalDate) %>;
+        const DATE_MAX = <%- JSON.stringify(maxJournalDate) %>;
+
+        const state = {
+            view: INITIAL_VIEW,
+            journals: [],
+            logs: [],
+            historyFilter: 'all',
+            historySearch: '',
+            batchDates: [],
+            batchStatuses: new Map(),
+            batchRunning: false
+        };
+
+        const $ = (selector, root = document) => root.querySelector(selector);
+        const $$ = (selector, root = document) => Array.from(root.querySelectorAll(selector));
+
+        function escapeHtml(value) {
+            return String(value ?? '')
+                .replaceAll('&', '&amp;')
+                .replaceAll('<', '&lt;')
+                .replaceAll('>', '&gt;')
+                .replaceAll('"', '&quot;')
+                .replaceAll("'", '&#039;');
+        }
+
+        function formatDate(dateString, includeTime = false) {
+            if (!dateString) return '-';
+            const date = new Date(dateString.includes('T') ? dateString : `${dateString}T00:00:00`);
+            return new Intl.DateTimeFormat('id-ID', {
+                day: '2-digit', month: 'short', year: 'numeric',
+                ...(includeTime ? { hour: '2-digit', minute: '2-digit' } : {})
+            }).format(date);
+        }
+
+        // Jika sesi habis / belum login, API mengembalikan redirect -> lempar ke halaman login.
+        function redirectIfLoggedOut(response, data) {
+            if ((response && response.status === 401) || (data && data.redirect === '/login')) {
+                if (!location.pathname.startsWith('/login')) location.href = '/login';
+                return true;
+            }
+            return false;
+        }
+
+        function showToast(message, type = 'success') {
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.innerHTML = `<span class="toast-icon">${type === 'success' ? '✓' : type === 'warning' ? '!' : '×'}</span><div><strong>${type === 'success' ? 'Berhasil' : type === 'warning' ? 'Perhatian' : 'Gagal'}</strong><p>${escapeHtml(message)}</p></div>`;
+            $('#toast-region').appendChild(toast);
+            requestAnimationFrame(() => toast.classList.add('visible'));
+            setTimeout(() => {
+                toast.classList.remove('visible');
+                setTimeout(() => toast.remove(), 250);
+            }, 4200);
+        }
+
+        function setView(view) {
+            const target = $(`[data-view="${view}"]`) ? view : 'dashboard';
+            state.view = target;
+            $$('.view-panel').forEach((panel) => panel.classList.toggle('active', panel.dataset.view === target));
+            $$('.nav-item').forEach((item) => item.classList.toggle('active', item.dataset.viewTarget === target));
+            document.body.dataset.currentView = target;
+            try { history.replaceState(null, '', `/?view=${target}`); } catch (error) { /* Preview/file mode */ }
+            closeMobileMenu();
+
+            if (target === 'history') renderHistory();
+            if (target === 'logs') renderLogs();
+        }
+
+        function openMobileMenu() {
+            $('#sidebar').classList.add('open');
+            $('#mobile-overlay').classList.add('visible');
+        }
+
+        function closeMobileMenu() {
+            $('#sidebar').classList.remove('open');
+            $('#mobile-overlay').classList.remove('visible');
+        }
+
+        async function fetchStatus() {
+            try {
+                const response = await fetch('/api/status');
+                const data = await response.json();
+                if (redirectIfLoggedOut(response, data)) return;
+                $('#connection-dot').classList.toggle('online', data.ready);
+                const chip = $('#system-chip');
+                chip.classList.toggle('ready', data.ready);
+                chip.classList.toggle('error', Boolean(data.error));
+                $('strong', chip).textContent = data.ready ? 'Sistem siap' : data.error ? 'Galat koneksi' : 'Menginisialisasi';
+            } catch (error) {
+                $('#system-chip').classList.add('error');
+                $('strong', $('#system-chip')).textContent = 'Server tidak tersedia';
+            }
+        }
+
+        async function fetchJournals() {
+            try {
+                const response = await fetch('/api/journals?limit=1000');
+                const data = await response.json();
+                if (redirectIfLoggedOut(response, data)) return;
+                if (!response.ok) throw new Error(data.error || 'Gagal mengambil jurnal.');
+                state.journals = data.journals || [];
+                renderDashboard();
+                renderRecentJournals();
+                renderHistory();
+            } catch (error) {
+                showToast(error.message, 'error');
+            }
+        }
+
+        async function fetchLogs() {
+            try {
+                const response = await fetch('/api/logs');
+                const data = await response.json();
+                if (redirectIfLoggedOut(response, data)) return;
+                state.logs = data;
+                renderDashboardLogs();
+                if (state.view === 'logs') renderLogs();
+            } catch (error) {
+                console.error('Failed to fetch logs', error);
+            }
+        }
+
+        function renderDashboard() {
+            const hadir = state.journals.filter((journal) => journal.keterangan === 'hadir').length;
+            const izin = state.journals.filter((journal) => journal.keterangan === 'izin').length;
+            const libur = state.journals.filter((journal) => journal.keterangan === 'libur').length;
+            const attendanceBase = hadir + izin;
+            const rate = attendanceBase ? Math.round((hadir / attendanceBase) * 100) : 0;
+            const progress = Math.min(100, Math.round((state.journals.length / 60) * 100));
+
+            $('#attendance-rate').textContent = `${rate}%`;
+            $('#journal-count').textContent = state.journals.length;
+            $('#present-count').textContent = hadir;
+            $('#internship-progress').style.width = `${progress}%`;
+            $('#internship-progress-label').textContent = `${progress}%`;
+            $('#journal-trend').textContent = `${izin} izin · ${libur} libur`;
+        }
+
+        function renderDashboardLogs() {
+            const logs = state.logs.slice(-3).reverse();
+            $('#dashboard-log-list').innerHTML = logs.length
+                ? logs.map((log) => `<div><time>${escapeHtml(log.time)}</time><span class="log-type ${escapeHtml(log.type.toLowerCase())}">[${escapeHtml(log.type)}]</span><p>${escapeHtml(log.message)}</p><em class="log-badge ${log.type === 'ERROR' || log.type === 'FATAL' ? 'failed' : log.type === 'WARN' ? 'warning' : 'success'}">${log.type === 'ERROR' || log.type === 'FATAL' ? 'FAILED' : log.type === 'WARN' ? 'WARN' : 'OK'}</em></div>`).join('')
+                : '<div class="empty-dark">Belum ada log.</div>';
+        }
+
+        function statusBadge(status) {
+            const labels = { hadir: 'Hadir', izin: 'Izin', libur: 'Libur' };
+            return `<span class="status-badge ${escapeHtml(status)}"><i></i>${labels[status] || escapeHtml(status)}</span>`;
+        }
+
+        function renderRecentJournals() {
+            const recent = state.journals.slice(0, 5);
+            $('#recent-journals').innerHTML = recent.length
+                ? recent.map((journal) => `<div class="recent-item"><span class="recent-check ${escapeHtml(journal.keterangan)}">✓</span><div><strong>${formatDate(journal.tanggal)} · ${escapeHtml(journal.keterangan)}</strong><p>${escapeHtml(journal.kegiatan)}</p></div><button type="button" data-delete-journal="${escapeHtml(journal.id)}" aria-label="Hapus jurnal">×</button></div>`).join('')
+                : '<div class="empty-state compact">Belum ada jurnal.</div>';
+        }
+
+        function renderHistory() {
+            const query = state.historySearch.toLowerCase();
+            const filtered = state.journals.filter((journal) => {
+                const matchesType = state.historyFilter === 'all' || journal.keterangan === state.historyFilter;
+                const haystack = `${journal.tanggal} ${journal.kegiatan} ${journal.keterangan}`.toLowerCase();
+                return matchesType && haystack.includes(query);
+            });
+
+            $('#history-table-body').innerHTML = filtered.length
+                ? filtered.map((journal) => `<tr><td><strong>${formatDate(journal.tanggal)}</strong><small>${journal.created_at ? formatDate(journal.created_at, true) : 'Catatan tersimpan'}</small></td><td><p class="activity-cell">${escapeHtml(journal.kegiatan)}</p></td><td><span class="type-chip"><svg viewBox="0 0 24 24"><path d="M8 3v3M16 3v3M4 9h16"></path><rect x="4" y="5" width="16" height="16" rx="2"></rect></svg>Absensi</span></td><td>${statusBadge(journal.keterangan)}</td><td><button class="table-action danger" type="button" data-delete-journal="${escapeHtml(journal.id)}" title="Hapus jurnal"><svg viewBox="0 0 24 24"><path d="M4 7h16M9 7V4h6v3M7 7l1 14h8l1-14M10 11v6M14 11v6"></path></svg></button></td></tr>`).join('')
+                : '<tr><td colspan="5"><div class="empty-state">Tidak ada record yang cocok.</div></td></tr>';
+            $('#history-count-label').textContent = `Menampilkan ${filtered.length} dari ${state.journals.length} catatan`;
+        }
+
+        function renderLogs() {
+            const query = $('#log-search').value.trim().toLowerCase();
+            const filtered = state.logs.filter((log) => `${log.time} ${log.type} ${log.message}`.toLowerCase().includes(query));
+            $('#terminal-output').innerHTML = filtered.length
+                ? filtered.map((log) => `<div class="terminal-line ${escapeHtml(log.type.toLowerCase())}"><time>[${escapeHtml(log.timestamp ? log.timestamp.replace('T', ' ').slice(0, 19) : log.time)}]</time><strong>[${escapeHtml(log.type)}]</strong><span>${escapeHtml(log.message)}</span></div>`).join('') + '<div class="terminal-cursor"></div>'
+                : '<div class="terminal-empty">Tidak ada log yang cocok.</div>';
+            $('#terminal-output').scrollTop = $('#terminal-output').scrollHeight;
+        }
+
+        async function deleteJournal(id) {
+            if (!confirm('Hapus jurnal ini? Tindakan ini tidak dapat dibatalkan.')) return;
+            try {
+                const response = await fetch(`/api/journal/${encodeURIComponent(id)}`, { method: 'DELETE' });
+                const data = await response.json();
+                if (redirectIfLoggedOut(response, data)) return;
+                if (!response.ok) throw new Error(data.error || 'Gagal menghapus jurnal.');
+                showToast(data.message || 'Jurnal berhasil dihapus.');
+                await Promise.all([fetchJournals(), fetchLogs()]);
+            } catch (error) {
+                showToast(error.message, 'error');
+            }
+        }
+
+        function updateCounter(textareaId, counterId) {
+            $(counterId).textContent = $(textareaId).value.length;
+        }
+
+        async function updateSingleIzinState() {
+            const isIzin = $('#single-status').value === 'izin';
+            $('#single-upload-zone').classList.toggle('hidden', !isIzin);
+            $('#single-izin-info').classList.add('hidden');
+            if (!isIzin || !$('#single-date').value) return;
+
+            try {
+                const response = await fetch(`/api/check-kemarin-izin?tanggal=${encodeURIComponent($('#single-date').value)}`);
+                const data = await response.json();
+                if (data.izin_lanjutan_tersedia) {
+                    $('#single-izin-info').classList.remove('hidden');
+                    $('#single-izin-copy').textContent = data.foto_kemarin_ada
+                        ? `Foto izin dari ${data.tanggal_dicek} tersedia dan dapat dipakai ulang.`
+                        : `Tanggal ${data.tanggal_dicek} berstatus izin, tetapi foto belum tersedia.`;
+                }
+            } catch (error) {
+                console.error(error);
+            }
+        }
+
+        async function submitSingleForm(event) {
+            event.preventDefault();
+            const button = $('#single-submit-button');
+            const original = button.innerHTML;
+            button.disabled = true;
+            button.innerHTML = '<span class="button-spinner"></span> Mengirim...';
+
+            try {
+                const response = await fetch('/api/submit', { method: 'POST', body: new FormData(event.currentTarget) });
+                const data = await response.json();
+                if (redirectIfLoggedOut(response, data)) return;
+                if (!response.ok) throw new Error(data.error || 'Submit gagal.');
+                showToast(data.message);
+                event.currentTarget.reset();
+                setDefaultDates();
+                updateSingleIzinState();
+                await Promise.all([fetchJournals(), fetchLogs()]);
+            } catch (error) {
+                showToast(error.message, 'error');
+            } finally {
+                button.disabled = false;
+                button.innerHTML = original;
+            }
+        }
+
+        function getDaysInMonth(monthValue) {
+            if (!/^\d{4}-\d{2}$/.test(monthValue)) return 0;
+            const [year, month] = monthValue.split('-').map(Number);
+            return new Date(year, month, 0).getDate();
+        }
+
+        function buildClientBatchDates() {
+            const monthValue = $('#batch-month').value;
+            const start = Number($('#batch-start-day').value);
+            const end = Number($('#batch-end-day').value);
+
+            if (!/^\d{4}-\d{2}$/.test(monthValue)) throw new Error('Pilih bulan batch terlebih dahulu.');
+            if (!Number.isInteger(start) || !Number.isInteger(end)) throw new Error('Tanggal awal dan akhir harus berupa angka bulat.');
+            if (start < 1 || start > 31 || end < 1 || end > 31) throw new Error('Tanggal harus berada dalam rentang 1–31.');
+            if (start > end) throw new Error('Tanggal awal tidak boleh lebih besar dari tanggal akhir.');
+
+            const daysInMonth = getDaysInMonth(monthValue);
+            if (start > daysInMonth || end > daysInMonth) throw new Error(`Bulan ${monthValue} hanya memiliki ${daysInMonth} hari.`);
+
+            const [year, month] = monthValue.split('-');
+            return Array.from({ length: end - start + 1 }, (_, index) => `${year}-${month}-${String(start + index).padStart(2, '0')}`);
+        }
+
+        function previewBatchDates() {
+            const validation = $('#batch-validation-message');
+            try {
+                state.batchDates = buildClientBatchDates();
+                validation.classList.add('hidden');
+                $('#batch-date-count').textContent = `${state.batchDates.length} hari`;
+                state.batchStatuses = new Map(state.batchDates.map((date) => [date, { status: 'pending' }]));
+                renderBatchGrid();
+                updateBatchCounters();
+            } catch (error) {
+                state.batchDates = [];
+                $('#batch-date-count').textContent = '0 hari';
+                validation.textContent = error.message;
+                validation.classList.remove('hidden');
+                $('#batch-date-grid').innerHTML = '<div class="empty-state">Rentang tanggal belum valid.</div>';
+                updateBatchCounters();
+            }
+        }
+
+        function renderBatchGrid() {
+            $('#batch-date-grid').innerHTML = state.batchDates.map((date) => {
+                const item = state.batchStatuses.get(date) || { status: 'pending' };
+                const day = date.slice(-2);
+                const month = new Intl.DateTimeFormat('id-ID', { month: 'short' }).format(new Date(`${date}T00:00:00`));
+                const symbol = item.status === 'success' ? '✓' : item.status === 'failed' ? '!' : item.status === 'processing' ? '↻' : '';
+                return `<div class="batch-date-item ${item.status}" title="${escapeHtml(item.error || '')}"><span>${escapeHtml(month)} ${day}</span><strong>${symbol}</strong>${item.error ? `<small>${escapeHtml(item.error)}</small>` : ''}</div>`;
+            }).join('');
+        }
+
+        function updateBatchCounters() {
+            const values = Array.from(state.batchStatuses.values());
+            const success = values.filter((item) => item.status === 'success').length;
+            const failed = values.filter((item) => item.status === 'failed').length;
+            const pending = values.filter((item) => item.status === 'pending').length;
+            $('#batch-success-count').textContent = success;
+            $('#batch-failed-count').textContent = failed;
+            $('#batch-pending-count').textContent = pending;
+        }
+
+        function updateBatchProgress(current, total, title, message) {
+            const percent = total ? Math.round((current / total) * 100) : 0;
+            $('#batch-progress-percent').textContent = `${percent}%`;
+            $('#batch-progress-bar').style.width = `${percent}%`;
+            $('#circular-progress').style.setProperty('--progress', `${percent * 3.6}deg`);
+            $('#batch-progress-title').textContent = title;
+            $('#batch-progress-message').textContent = message;
+        }
+
+        function handleBatchEvent(event) {
+            if (event.type === 'start') {
+                updateBatchProgress(0, event.total, `Memproses 0 dari ${event.total} hari`, `Delay antar request: ${event.delayMs} ms`);
+                return;
+            }
+
+            if (event.type === 'processing') {
+                state.batchStatuses.set(event.date, { status: 'processing' });
+                updateBatchProgress(event.current - 1, event.total, `Memproses ${event.current} dari ${event.total} hari`, event.message);
+            }
+
+            if (event.type === 'success') {
+                state.batchStatuses.set(event.date, { status: 'success' });
+                updateBatchProgress(event.current, event.total, `Memproses ${event.current} dari ${event.total} hari`, `✓ ${event.date} berhasil dikirim.`);
+            }
+
+            if (event.type === 'failure') {
+                state.batchStatuses.set(event.date, { status: 'failed', error: event.error });
+                updateBatchProgress(event.current, event.total, `Memproses ${event.current} dari ${event.total} hari`, `✗ ${event.date}: ${event.error}`);
+            }
+
+            if (event.type === 'complete') {
+                const summary = event.summary;
+                updateBatchProgress(summary.total, summary.total, 'Pemrosesan batch selesai', `${summary.success} berhasil · ${summary.failed} gagal`);
+                renderBatchSummary(summary);
+                showToast(summary.failed ? `Batch selesai dengan ${summary.failed} tanggal gagal.` : 'Seluruh tanggal berhasil diproses.', summary.failed ? 'warning' : 'success');
+            }
+
+            if (event.type === 'fatal') {
+                throw new Error(event.error);
+            }
+
+            renderBatchGrid();
+            updateBatchCounters();
+        }
+
+        function renderBatchSummary(summary) {
+            $('#batch-summary-card').classList.remove('hidden');
+            $('#summary-total').textContent = summary.total;
+            $('#summary-success').textContent = summary.success;
+            $('#summary-failed').textContent = summary.failed;
+            const failedList = $('#failed-date-list');
+            failedList.classList.toggle('hidden', !summary.failedDates.length);
+            $('#failed-date-chips').innerHTML = summary.failedDates.map((date) => `<span>${escapeHtml(date)}</span>`).join('');
+        }
+
+        async function submitBatchForm(event) {
+            event.preventDefault();
+            if (state.batchRunning) return;
+
+            try {
+                state.batchDates = buildClientBatchDates();
+            } catch (error) {
+                showToast(error.message, 'error');
+                return;
+            }
+
+            state.batchRunning = true;
+            state.batchStatuses = new Map(state.batchDates.map((date) => [date, { status: 'pending' }]));
+            $('#batch-summary-card').classList.add('hidden');
+            renderBatchGrid();
+            updateBatchCounters();
+            updateBatchProgress(0, state.batchDates.length, `Memproses 0 dari ${state.batchDates.length} hari`, 'Menyiapkan request pertama...');
+
+            const button = $('#batch-submit-button');
+            const original = button.innerHTML;
+            button.disabled = true;
+            button.innerHTML = '<span class="button-spinner"></span> Batch sedang berjalan...';
+
+            try {
+                const response = await fetch('/api/batch-submit', { method: 'POST', body: new FormData(event.currentTarget) });
+                const contentType = response.headers.get('content-type') || '';
+                if (!response.ok && !contentType.includes('application/x-ndjson')) {
+                    const data = await response.json().catch(() => ({}));
+                    throw new Error(data.error || 'Batch request gagal diproses.');
+                }
+                if (!response.body) throw new Error('Browser tidak mendukung streaming progress.');
+
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
+                let buffer = '';
+
+                while (true) {
+                    const { value, done } = await reader.read();
+                    if (done) break;
+                    buffer += decoder.decode(value, { stream: true });
+                    const lines = buffer.split('\n');
+                    buffer = lines.pop() || '';
+
+                    for (const line of lines) {
+                        if (!line.trim()) continue;
+                        handleBatchEvent(JSON.parse(line));
+                    }
+                }
+
+                if (buffer.trim()) handleBatchEvent(JSON.parse(buffer));
+                await Promise.all([fetchJournals(), fetchLogs()]);
+            } catch (error) {
+                updateBatchProgress(0, state.batchDates.length, 'Batch dihentikan', error.message);
+                showToast(error.message, 'error');
+            } finally {
+                state.batchRunning = false;
+                button.disabled = false;
+                button.innerHTML = original;
+            }
+        }
+
+        function setDefaultDates() {
+            const today = new Date();
+            let dateValue = today.toISOString().slice(0, 10);
+            if (dateValue < DATE_MIN) dateValue = DATE_MIN;
+            if (DATE_MAX && dateValue > DATE_MAX) dateValue = DATE_MAX;
+            $('#single-date').value = dateValue;
+            $('#batch-month').value = dateValue.slice(0, 7);
+        }
+
+        function updateUploadFilename(input, label, fallback) {
+            $(label).textContent = $(input).files[0]?.name || fallback;
+        }
+
+        function bindEvents() {
+            $$('[data-view-target]').forEach((button) => button.addEventListener('click', () => setView(button.dataset.viewTarget)));
+            $('#mobile-menu-button').addEventListener('click', openMobileMenu);
+            $('#mobile-overlay').addEventListener('click', closeMobileMenu);
+
+            $('#single-form').addEventListener('submit', submitSingleForm);
+            $('#single-activity').addEventListener('input', () => updateCounter('#single-activity', '#single-character-count'));
+            $('#single-status').addEventListener('change', updateSingleIzinState);
+            $('#single-date').addEventListener('change', updateSingleIzinState);
+            $('#single-file').addEventListener('change', () => updateUploadFilename('#single-file', '#single-file-label', 'PNG, JPG, WebP, atau PDF hingga 10MB'));
+
+            $('#batch-form').addEventListener('submit', submitBatchForm);
+            ['#batch-month', '#batch-start-day', '#batch-end-day'].forEach((selector) => $(selector).addEventListener('input', previewBatchDates));
+            $('#batch-activity').addEventListener('input', () => updateCounter('#batch-activity', '#batch-character-count'));
+            $('#batch-status').addEventListener('change', () => $('#batch-upload-zone').classList.toggle('hidden', $('#batch-status').value !== 'izin'));
+            $('#batch-file').addEventListener('change', () => updateUploadFilename('#batch-file', '#batch-file-label', 'Tanggal berikutnya memakai logic izin lanjutan lama.'));
+
+            $('#history-filter-tabs').addEventListener('click', (event) => {
+                const button = event.target.closest('[data-history-filter]');
+                if (!button) return;
+                state.historyFilter = button.dataset.historyFilter;
+                $$('[data-history-filter]').forEach((item) => item.classList.toggle('active', item === button));
+                renderHistory();
+            });
+            $('#history-search').addEventListener('input', (event) => {
+                state.historySearch = event.target.value;
+                renderHistory();
+            });
+            $('#global-search').addEventListener('input', (event) => {
+                state.historySearch = event.target.value;
+                $('#history-search').value = event.target.value;
+                if (event.target.value.trim()) setView('history');
+                renderHistory();
+            });
+            $('#log-search').addEventListener('input', renderLogs);
+
+            document.addEventListener('click', (event) => {
+                const deleteButton = event.target.closest('[data-delete-journal]');
+                if (deleteButton) deleteJournal(deleteButton.dataset.deleteJournal);
+            });
+
+            $('#export-logs-button').addEventListener('click', () => {
+                const content = state.logs.map((log) => `[${log.timestamp || log.time}] [${log.type}] ${log.message}`).join('\n');
+                const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = `siprakerin-logs-${new Date().toISOString().slice(0, 10)}.txt`;
+                link.click();
+                URL.revokeObjectURL(url);
+            });
+
+            $('#clear-logs-button').addEventListener('click', async () => {
+                await fetch('/api/logs/clear', { method: 'POST' });
+                await fetchLogs();
+                showToast('System logs dibersihkan.');
+            });
+        }
+
+        async function initializeUi() {
+            bindEvents();
+            setDefaultDates();
+            previewBatchDates();
+            updateSingleIzinState();
+            setView(INITIAL_VIEW);
+            await Promise.all([fetchStatus(), fetchJournals(), fetchLogs()]);
+
+            if (SERVER_MESSAGE) showToast(SERVER_MESSAGE);
+            if (SERVER_ERROR) showToast(SERVER_ERROR, 'error');
+
+            setInterval(fetchLogs, 1800);
+            setInterval(fetchStatus, 5000);
+        }
+
+        initializeUi();
+    </script>
+</body>
+</html>

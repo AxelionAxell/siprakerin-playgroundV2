@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Login Siprakerin Playground V2">
+    <title>Masuk — Siprakerin Playground V2</title>
+    <link href="/output.css" rel="stylesheet">
+    <style>
+        .login-shell {
+            min-height: 100vh;
+            display: grid;
+            place-items: center;
+            padding: 24px;
+            background:
+                radial-gradient(600px 400px at 15% 10%, rgba(79,82,220,.10), transparent),
+                radial-gradient(500px 380px at 85% 90%, rgba(79,82,220,.08), transparent),
+                var(--background);
+        }
+        .login-card {
+            width: 100%;
+            max-width: 420px;
+            background: #fff;
+            border: 1px solid var(--outline);
+            border-radius: 20px;
+            padding: 36px 34px;
+            box-shadow: 0 24px 60px rgba(30,34,90,.10);
+        }
+        .login-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 26px;
+        }
+        .login-brand .brand-mark {
+            width: 46px;
+            height: 46px;
+            display: grid;
+            place-items: center;
+            border-radius: 14px;
+            background: linear-gradient(145deg, #6265ef, #4547cf);
+            color: #fff;
+            font-weight: 800;
+            font-size: 22px;
+        }
+        .login-brand .brand-mark img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 14px;
+            display: block;
+        }
+        .login-brand .brand-name { font-weight: 800; font-size: 19px; letter-spacing: -.02em; }
+        .login-brand .brand-subtitle { font-size: 12px; color: #7b7e93; font-weight: 600; }
+        .login-card h1 { font-size: 24px; font-weight: 800; letter-spacing: -.02em; margin: 0 0 6px; }
+        .login-card > p { font-size: 13px; color: #7b7e93; margin: 0 0 24px; line-height: 1.6; }
+        .username-wrap { position: relative; }
+        .username-wrap input { width: 100%; padding-right: 132px !important; }
+        .username-suffix {
+            position: absolute;
+            right: 13px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 13px;
+            color: #7b7e93;
+            font-weight: 600;
+            pointer-events: none;
+        }
+        .login-error {
+            display: flex;
+            gap: 10px;
+            align-items: flex-start;
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            color: #b91c1c;
+            font-size: 13px;
+            border-radius: 12px;
+            padding: 12px 14px;
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+        .login-error svg { width: 18px; height: 18px; flex-shrink: 0; margin-top: 1px; }
+        .login-foot { margin-top: 22px; text-align: center; font-size: 12px; color: #9aa0b5; }
+    </style>
+</head>
+<body>
+    <div class="login-shell">
+        <div class="login-card">
+            <div class="login-brand">
+                <div class="brand-mark"><img src="/logo.png" alt="Logo Siprakerin"></div>
+                <div>
+                    <div class="brand-name">Siprakerin</div>
+                    <div class="brand-subtitle">Playground V2</div>
+                </div>
+            </div>
+
+            <h1>Selamat Datang</h1>
+            <p>Masuk dengan akun Siprakerin Anda untuk mengelola jurnal absensi.</p>
+
+            <% if (error) { %>
+                <div class="login-error" role="alert">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="M12 8v4M12 16h.01"></path></svg>
+                    <span><%= error %></span>
+                </div>
+            <% } %>
+
+            <form method="POST" action="/login" autocomplete="off">
+                <label class="field-group">
+                    <span>Username</span>
+                    <div class="username-wrap">
+                        <input type="text" name="username" value="<%= username || '' %>" placeholder="nisn" required autofocus>
+                        <span class="username-suffix">@siprakerin.com</span>
+                    </div>
+                </label>
+                <label class="field-group">
+                    <span>Kata Sandi</span>
+                    <input type="password" name="password" placeholder="••••••••" required>
+                </label>
+                <button class="button primary full-width" type="submit" style="min-height: 48px; font-size: 14px;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M15 12H3"></path></svg>
+                    Masuk
+                </button>
+            </form>
+        </div>
+    </div>
+</body>
+</html>
