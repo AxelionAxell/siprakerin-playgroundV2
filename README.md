@@ -1,223 +1,147 @@
 # Siprakerin Playground V2
 
-Versi ini mempertahankan struktur project lama dan mekanisme request Supabase yang sudah ada, lalu menambahkan tampilan dashboard baru, **Batch Attendance**, **halaman login multi-user**, dan **UI berbahasa Indonesia**.
+A web-based internship attendance dashboard — daily journal
+submission (single-date and batch modes), history tracking.
 
-```text
-siprakerinplayground-main/
-├── automasi/
-│   ├── index.js
-│   ├── inspect_raw.js
-│   ├── package.json
-│   ├── src/
-│   │   ├── auth.js          # login lama (CLI) + loginAs/createUserClient (web multi-user)
-│   │   ├── config.js        # SUPABASE_URL/KEY wajib; kredensial .env opsional (CLI saja)
-│   │   ├── journal.js       # memakai Supabase client milik user yang login (per-request)
-│   │   ├── requestContext.js# AsyncLocalStorage: client aktif per request
-│   │   └── utils.js         # ditambah helper rentang dan sequential batch
-│   └── test/
-│       └── batch.test.js
-├── ui/
-│   ├── public/
-│   │   └── output.css       # CSS hasil build, sudah disertakan
-│   ├── src/
-│   │   └── input.css        # design system dan responsive UI
-│   ├── views/
-│   │   ├── index.ejs        # seluruh UI baru tetap pada view lama (Bahasa Indonesia)
-│   │   └── login.ejs        # halaman login
-│   ├── server.js            # session login + route lama + route batch
-│   ├── package.json
-│   └── tailwind.config.js
-├── .env.example
-└── README.md
-```
+> V1 run locally for a single date absen.
 
-## Login multi-user
+> V2 is batch-absen, example: 1-30 day absen in 5 sec
 
-- Buka `http://localhost:3000` → otomatis diarahkan ke halaman **login**.
-- Isi **username** (tanpa `@siprakerin.com`, sudah ditempel otomatis) dan **kata sandi**.
-- Setiap user login dengan akunnya sendiri; data siswa, jurnal, dan riwayat yang tampil
-  selalu milik user yang login — tidak tercampur antar user.
-- Sesi berlaku 12 jam. Tombol **keluar** ada di pojok kanan atas.
-- `.env` kini hanya wajib berisi `SUPABASE_URL` dan `SUPABASE_KEY`.
-  `USER_EMAIL`/`USER_PASSWORD`/`ID_SISWA`/`ID_KELAS`/`ID_INDUSTRI` bersifat opsional
-  dan hanya dipakai mode CLI automasi (`node automasi/index.js`).
+## Features
 
-## Yang tetap dipertahankan
+- **Login** — login page, each user signs in with their own
+  `username@siprakerin.com` account.
+- **Dashboard** — attendance rate, journal entry count, present days, internship
+  progress, quick actions, and latest system logs.
+- **Single-date attendance** — submit a journal for any date
+  (no upper date limit; lower bound is Jan 5, 2026).
+- **Batch Attendance** — fill many dates at once, processed sequentially
+  one by one with live per-date progress + success/failure summary.
+- **Automatic izin lanjutan** — if yesterday (H-1) was marked `izin`, yesterday's
+  permission letter photo is reused automatically. You can still upload a fresh
+  letter if you want.
+- **Surat izin upload** — uploads to Supabase Storage (bucket `izin`), following
+  the exact flow of the original platform.
+- **History** — table of all submitted journals, status filter, search,
+  record deletion.
+- **System logs** — live terminal of all server activity, searchable and
+  exportable to `.txt`.
 
-- Login tetap memakai `automasi/src/auth.js`.
-- Supabase client, session, dan token tetap memakai logic lama.
-- Fetch student details dan history tetap memakai `automasi/src/journal.js`.
-- Insert jurnal tetap melalui fungsi lama berikut:
+## Requirements
 
-```js
-submitJournal(null, kegiatan, studentIds, keterangan, tanggal, izinLanjutan);
-```
+- Node.js 18+
+- A Supabase account (project URL + anon key)
+- `username@siprakerin.com` user account registered in Supabase Auth
 
-- Endpoint/table, payload, duplicate check, izin lanjutan, dan upload foto tidak diganti.
-- Route form lama `POST /submit` tetap tersedia.
-- Mode **Single Date** tetap tersedia pada menu Attendance.
+## How to Use
 
-## Batch Attendance
+### Run locally (on your own machine)
 
-Batch menerima:
-
-- Bulan (`YYYY-MM`)
-- Hari mulai (`1–31`)
-- Hari akhir (`1–31`)
-- Status
-- Kegiatan
-- Delay 500–1000 ms
-- Surat izin opsional
-
-Daftar tanggal dibentuk oleh `buildBatchDates()` di `automasi/src/utils.js`, lalu dijalankan oleh `runSequentialBatch()`.
-
-Setiap tanggal menunggu request sebelumnya selesai:
-
-```js
-for (let index = 0; index < dates.length; index += 1) {
-    try {
-        await processDate(dates[index]);
-    } catch (error) {
-        // Dicatat sebagai gagal, kemudian lanjut ke tanggal berikutnya.
-    }
-
-    await sleep(delayMs);
-}
-```
-
-`processDate()` pada server tetap memanggil `submitJournal()` lama. Batch tidak memakai `Promise.all` dan tidak membuat endpoint Supabase baru.
-
-Progress dikirim oleh server sebagai **NDJSON stream**, sehingga halaman dapat memperbarui status setelah setiap tanggal selesai:
-
-```text
-[3/10] Mengirim absensi tanggal 2026-07-03...
-✓ Berhasil
-```
-
-Jika gagal:
-
-```text
-[4/10] Mengirim absensi tanggal 2026-07-04...
-✗ Gagal: alasan error
-```
-
-Setelah selesai, UI menampilkan total, jumlah berhasil, jumlah gagal, dan daftar tanggal gagal.
-
-## Validasi
-
-- Hari mulai dan akhir harus berupa angka bulat.
-- Hari harus berada pada rentang 1–31.
-- Hari mulai tidak boleh lebih besar dari hari akhir.
-- Hari harus tersedia pada bulan yang dipilih, misalnya 31 Februari ditolak.
-- Batas bawah tanggal (`2026-01-05`) tetap dipertahankan; tidak ada batas maksimal tanggal.
-- Kegiatan wajib diisi.
-- Status hanya dapat berupa `hadir`, `izin`, atau `libur`.
-
-## UI Baru
-
-Satu halaman EJS lama kini menyediakan:
-
-- Dashboard
-- Single Date Attendance
-- Batch Attendance dengan progress dan execution grid
-- History dengan pencarian dan filter
-- Live System Logs dengan pencarian, clear, dan export
-- Sidebar desktop dan drawer mobile
-- Toast berhasil/gagal
-- Responsive layout
-
-## Setup
-
-### 1. Install dependency
+**1. Clone & install**
 
 ```bash
-cd automasi
-npm install
+git clone https://github.com/AxelionAxell/siprakerinplayground-main.git
+cd siprakerinplayground-v2
 
-cd ../ui
-npm install
+# install UI dependencies
+cd ui && npm install && cd ..
+
+# (optional) install automasi CLI dependencies
+cd automasi && npm install && cd ..
 ```
 
-### 2. Buat `.env` pada root project
+**2. Fill in `.env`**
+
+Create a `.env` file in the **root folder** (next to the `ui` folder), for example:
 
 ```env
 SUPABASE_URL=https://your-project.supabase.co
-SUPABASE_KEY=your-anon-key
-USER_EMAIL=your_email@example.com
-USER_PASSWORD=your_password
-
-# Opsional jika data kelas/industri tidak dapat difetch otomatis
-ID_SISWA=
-ID_KELAS=
-ID_INDUSTRI=
+SUPABASE_KEY=your_anon_key_here
 ```
+> Get ENV Here: https://grafikarsa.com/4rgandull/siprakerin-playground
 
-### 3. Build CSS
+> The V2 web app does **not** need `USER_EMAIL`/`USER_PASSWORD` in `.env` —
+> every user logs in through the login page. The `.env` credentials are only
+> used if you run the automasi CLI (`node automasi/index.js`).
 
-File `ui/public/output.css` sudah disertakan di ZIP hasil implementasi. Jika mengubah styling:
+**3. Build the CSS (required before the first run)**
 
 ```bash
 cd ui
 npm run build:css
 ```
 
-Untuk watch mode:
+Skipping this step will break the page styling.
 
-```bash
-npm run watch:css
-```
-
-### 4. Jalankan server
+**4. Run it**
 
 ```bash
 cd ui
-npm run dev
+npm run dev      # dev mode (auto-restart)
+# or
+npm start        # production mode
 ```
 
-Buka:
+Open `http://localhost:3000` — you will be redirected to the login page.
+Enter your **username** (without `@siprakerin.com`, it is appended automatically)
+and **password**, then sign in.
+
+## Project Structure
 
 ```text
-http://localhost:3000
+siprakerinplayground-v2/
+├── automasi/
+│   ├── index.js            # automasi CLI (daily cron, single-user via .env)
+│   ├── src/
+│   │   ├── auth.js         # CLI login + loginAs/createUserClient (web multi-user)
+│   │   ├── config.js       # reads .env (SUPABASE_URL/KEY required, rest optional)
+│   │   ├── journal.js      # all journal operations (used by CLI & web)
+│   │   ├── requestContext.js # per-request Supabase client (AsyncLocalStorage)
+│   │   └── utils.js        # batch helpers: buildBatchDates, runSequentialBatch
+│   └── test/
+│       └── batch.test.js
+├── ui/
+│   ├── server.js           # Express server: sessions, login/logout, API, rendering
+│   ├── views/
+│   │   ├── login.ejs       # login page
+│   │   └── index.ejs       # main app
+│   ├── src/input.css       # Tailwind source
+│   └── public/output.css   # built CSS
+└── README.md
 ```
 
-## Test
+### How the multi-user session works (in short)
 
-```bash
-cd automasi
-npm test
-```
+Every authenticated request carries that user's own Supabase client
+(created at login, stored in the session). `journal.js` automatically uses
+the active client via `requestContext`, so every query/insert runs as the
+logged-in user — never mixed up. CLI mode keeps using the legacy global
+client like V1.
 
-Test mencakup:
+## Available Scripts
 
-- Rentang inklusif dan urut
-- Validasi 1–31
-- Validasi awal ≤ akhir
-- Validasi jumlah hari dalam bulan
-- Normalisasi delay
-- Sequential execution
-- Continue-on-error dan failed date summary
+Run these inside the `ui` folder:
 
-## File utama yang berubah
+| Script              | What it does                          |
+| ------------------- | ------------------------------------- |
+| `npm run dev`       | Dev server (nodemon, auto-restart)    |
+| `npm start`         | Production server                     |
+| `npm run build:css` | One-time Tailwind build               |
+| `npm run watch:css` | Auto-rebuild CSS on changes           |
 
-### `automasi/src/utils.js`
+Run these inside the `automasi` folder:
 
-Menambahkan helper tanggal, delay, dan sequential batch. Tidak berisi endpoint maupun autentikasi.
+| Script          | What it does                                  |
+| --------------- | --------------------------------------------- |
+| `npm test`      | Unit tests (batch dates, delay, sequential)   |
+| `node index.js` | Daily automasi CLI (cron 16:00 WIB, Mon–Fri)  |
 
-### `ui/server.js`
 
-Menambahkan shared function `processJournalSubmission()` agar Single Date dan Batch Date memakai request lama yang sama. Menambahkan route:
+## Disclaimer
 
-- `POST /api/submit` untuk UI Single Date berbasis fetch
-- `POST /api/batch-submit` untuk stream Batch Attendance
-- `GET /api/status`
-- `POST /api/logs/clear`
+If you customize or modify the source code for personal gain, I am not responsible for any consequences that may arise.
 
-Route dan fitur lama tidak dihapus.
+## Credits
 
-### `ui/views/index.ejs`
-
-Mengganti tampilan lama menjadi dashboard multi-view dalam file EJS yang sama.
-
-### `ui/src/input.css`
-
-Menambahkan design system Indigo, card layout, terminal, progress indicator, status badge, dan responsive states.
+V1 was originally created by [Arga-12](https://github.com/Arga-12).
+V2 AxelionAxell continues and expands on that work.
