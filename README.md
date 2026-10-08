@@ -3,7 +3,7 @@
 A web-based internship attendance dashboard — daily journal
 submission (single-date and batch modes), history tracking.
 
-> V1 run locally for a single date absen.
+> V1 run for a single date absen.
 
 > V2 is batch-absen, example: 1-30 day absen in 5 sec
 
