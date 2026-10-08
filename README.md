@@ -144,4 +144,5 @@ If you customize or modify the source code for personal gain, I am not responsib
 ## Credits
 
 V1 was originally created by [Arga-12](https://github.com/Arga-12).
+
 V2 AxelionAxell continues and expands on that work.
