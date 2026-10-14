@@ -58,7 +58,7 @@ Create a `.env` file in the **root folder** (next to the `ui` folder), for examp
 SUPABASE_URL=https://your-project.supabase.co
 SUPABASE_KEY=your_anon_key_here
 ```
-> Get ENV Here: https://grafikarsa.com/4rgandull/siprakerin-playground
+> Get ENV Here: https://grafikarsa.com/axelionaxell/siprakerin-playground-v2
 
 > The V2 web app does **not** need `USER_EMAIL`/`USER_PASSWORD` in `.env` —
 > every user logs in through the login page. The `.env` credentials are only
